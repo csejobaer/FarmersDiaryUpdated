@@ -140,19 +140,39 @@ $farmerObject->getFarmersData($id);
                         <div class="reminder-list">
 
                             <!-- Single alerm -->
-                            <div class="single-reminder">
-                                <h3>Medicine dite hobe</h3>
-                                <ul>
-                                    <li><p>Aj sokal noytay uttorer jomite saar dite hobe</p></li>
-                                    <li><span style="color: red">12:20PM</span> <span style="color: #fff;">    00:00:00</span></li>
-                                    <li><span class="highlight">08 December, 2022</span></li>
-                                </ul>
-                                <div class="action-reminder text-right">
-                                    <button class="btn btn-default">Edit</button>
-                                    <button class="btn btn-danger">Delete</button>
-                                </div>
-                            </div>
+
+
+
+                            <?php 
+                                $queryResult = $database->query_execute("SELECT * FROM reminder WHERE '$id' = user_id ");
+                                if ($queryResult->num_rows > 0) {
+                                    while ($rows = $queryResult->fetch_assoc()) {
+                                       ?>
+                                        <div class="single-reminder">
+                                            <h3><?php echo $rows['title']?></h3>
+                                            <ul>
+                                                <li><p><?php echo $rows['notes']?></p></li>
+                                                <li><span style="color: red"><?php echo $rows['reminder_time']?></span> <span style="color: #fff;">    00:00:00</span></li>
+                                                <li><span class="highlight"><?php echo $rows['dates']?></span></li>
+                                            </ul>
+                                            <div class="action-reminder text-right">
+                                                <button class="btn btn-default">Edit</button>
+                                                <button class="btn btn-danger reminder-delete" data-target="#delete"  delete="<?php echo $rows['id'];?>"   data-toggle="modal">Delete</button>
+                                            </div>
+                                        </div>
+                                       <?php
+                                    }
+                                }
+                             ?>
+                            
+
+
+
+
                             <!-- Single alerm -->
+
+
+
                             <div id="newReminder"> </div>
 
 
@@ -179,6 +199,38 @@ $farmerObject->getFarmersData($id);
                     
                 </div>
             </div>
+
+
+
+
+
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="delete" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Delete Now</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <h5 style="color:#e00; text-align: center;">Remove Confirm.<br/> <span class="icofont-delete" style="font-size: 40px"></span></h5>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+        <button type="button" class="btn btn-primary" onclick="reloadPage();"  id="confirm">Sure</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
             <!-- /Footer  -->
             <script src="js/jquery.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -215,7 +267,7 @@ $farmerObject->getFarmersData($id);
                     var time = $('.timepicker').val();
                     var note = $('#reminder_note').val();
                     let arr = [];
-                    var htmlData = '<div class="single-reminder"><h3>'+title+'</h3><ul><li><p>'+note+'</p></li><li><span style="color: red">'+time+'</span> <span style="color: #fff;">    00:00:00</span></li><li><span class="highlight">'+date+'</span></li></ul><div class="action-reminder text-right"><button class="btn btn-default">Edit</button><button class="btn btn-danger">Delete</button></div></div>';
+                    var htmlData = '<div class="single-reminder"><h3>'+title+'</h3><ul><li><p>'+note+'</p></li><li><span style="color: red">'+time+'</span> <span style="color: #fff;">    00:00:00</span></li><li><span class="highlight">'+date+'</span></li></ul><div class="action-reminder text-right"><button class="btn btn-default">Edit</button> <button class="btn btn-danger">Delete</button></div></div>';
 
                     var count = Math.floor(Math.random() * 100);
                     if(title == ''){
@@ -224,10 +276,53 @@ $farmerObject->getFarmersData($id);
                         arr.push(1);
                     }
                     if (arr.length == 0) {
+                        var userID = <?php echo $id; ?>;
                         $('#newReminder').html(htmlData);
+                        // Send to database
+                        $.ajax({
+                            'url': 'ajax/reminder_insert.php',
+                            'success': function(result){
+                                
+                            },
+                            'type': 'post',
+                            'data': {
+                                'title' : title,
+                                'date': date, 
+                                'time': time,
+                                'note': note, 
+                                'userID': userID
+                            }
+                        });
                     }
 
                 });
+
+
+                $('.reminder-delete').click(function(){
+                    alertID = 0;
+                    var alertID = $(this).attr('delete');
+                    if(alertID != 0){
+                        $('#confirm').click(function(){
+                            $.ajax({
+                                'url': 'ajax/reminder_delete.php',
+                                'success': function(result){console.log("success");},
+                                'type': 'post',
+                                'data': {
+                                    'reminder_id': alertID
+                                }
+
+                            });
+                        });
+                    }
+                });
+
+
+
+
+
+
+
+
 
             </script>
 
